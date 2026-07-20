@@ -244,6 +244,51 @@
           <option value="diagnostic">Diagnostic / software issue</option>
         </select>
       </div>
+
+      <div class="field field-full" id="partsTypeField" style="display:none;">
+        <label for="partsType">Parts type</label>
+        <select id="partsType">
+          <option value="oem">OEM (dealer default)</option>
+          <option value="reman">Remanufactured / aftermarket (independent shops only)</option>
+        </select>
+        <div class="hint">Remanufactured packs and drive units are commonly reported 30-50% cheaper than OEM, but only available through independent or specialty shops, not the dealer network.</div>
+      </div>
+
+      <div class="field field-full" id="portIssueField" style="display:none;">
+        <label for="portIssue">Likely issue</label>
+        <select id="portIssue">
+          <option value="hardware">Charging door / connector hardware</option>
+          <option value="module">Possible onboard charging module</option>
+        </select>
+        <div class="hint">A stuck door or bent connector is cheap hardware. Intermittent charging or power negotiation failures may point to the onboard charging module instead, a pricier repair with less published cost data, so that range stays wide.</div>
+      </div>
+
+      <div class="field-grid" id="brakeOptionsField" style="display:none;">
+        <div class="field">
+          <label for="brakeAxle">Axle</label>
+          <select id="brakeAxle">
+            <option value="front">Front</option>
+            <option value="rear">Rear</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="brakeService">Service</label>
+          <select id="brakeService">
+            <option value="pads_rotors">Pads + rotors</option>
+            <option value="pads_only">Pads only</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field field-full" id="suspensionTypeField" style="display:none;">
+        <label for="suspensionType">Suspension type</label>
+        <select id="suspensionType">
+          <option value="standard">Standard (coil-over shock/strut)</option>
+          <option value="air">Air suspension</option>
+        </select>
+        <div class="hint">Air suspension systems are well documented as meaningfully more expensive to service than standard suspension. EV-specific figures aren't well published, so this range widens rather than pretending precision.</div>
+      </div>
+
       <div class="field">
         <label for="mileage">Current mileage</label>
         <input type="number" id="mileage" value="40000" min="0" step="1000">
@@ -291,6 +336,9 @@
 
     <h3>Why parts availability varies by manufacturer and region</h3>
     <p>Some manufacturers make EV-specific parts and diagnostic tools available to independent and aftermarket shops, others largely restrict them to their own dealer network. This varies further by whether a given independent shop has invested in EV-specific training and equipment, and by region as the used and aftermarket EV parts market matures unevenly.</p>
+
+    <h3>Narrowing the range: parts type, axle, and severity</h3>
+    <p>A few repair types let you narrow the estimate with a real, sourced sub-choice rather than a guess. Battery module and drive unit repairs let you pick OEM versus remanufactured/aftermarket parts, remanufactured packs and drive units are commonly reported 30-50% cheaper, but only through independent or specialty shops. Charging port repairs split into cheap door/connector hardware versus a pricier, less-documented onboard module issue. Brake jobs split by axle and whether rotors need replacing, both standard cost drivers in any brake repair guide. Suspension splits standard versus air suspension, which is well known to cost meaningfully more to service, though exact EV figures aren't well published so that range stays wide.</p>
 
     <h3>Independent service and your warranty</h3>
     <p>Under the federal Magnuson-Moss Warranty Act, a manufacturer cannot void your vehicle's warranty solely because you used an independent shop for a repair unrelated to a warranty claim. Having brakes or suspension serviced independently, for example, cannot legally void a separate battery or drivetrain warranty. It's still worth confirming with your specific manufacturer's warranty terms.</p>
@@ -345,20 +393,51 @@
   // the widely reported 20-40% differential (see Consumer Reports' repair shop survey, linked below).
   // All ranges are wide on purpose to span compact through premium EVs, not one vehicle.
   const REPAIRS = {
-    battery_module: { label: 'Battery module replacement', dealer: [1000, 8000], indy: [800, 6500], access: 'Limited', warrantyRelevant: true },
-    drive_unit:     { label: 'Drive unit / motor replacement', dealer: [3000, 15000], indy: [2500, 11000], access: 'Limited', warrantyRelevant: true },
-    charging_port:  { label: 'Charging port repair', dealer: [250, 700], indy: [150, 500], access: 'Moderate', warrantyRelevant: true },
-    suspension:     { label: 'Suspension component replacement', dealer: [500, 1600], indy: [350, 1100], access: 'High', warrantyRelevant: false },
-    brakes:         { label: 'Brake pads/rotors', dealer: [400, 900], indy: [300, 650], access: 'High', warrantyRelevant: false },
+    battery_module: { label: 'Battery module replacement', dealer: [1000, 8000], indyOEM: [800, 6500], access: 'Limited', warrantyRelevant: true, sub: 'parts' },
+    drive_unit:     { label: 'Drive unit / motor replacement', dealer: [3000, 15000], indyOEM: [2500, 11000], access: 'Limited', warrantyRelevant: true, sub: 'parts' },
+    charging_port:  { label: 'Charging port repair', warrantyRelevant: true, sub: 'port' },
+    suspension:     { label: 'Suspension component replacement', dealer: [500, 1600], indy: [350, 1100], access: 'High', warrantyRelevant: false, sub: 'suspension' },
+    brakes:         { label: 'Brake pads/rotors', dealer: [400, 900], indy: [300, 650], access: 'High', warrantyRelevant: false, sub: 'brakes' },
     battery_12v:    { label: '12V auxiliary battery replacement', dealer: [250, 450], indy: [150, 350], access: 'High', warrantyRelevant: false },
     diagnostic:     { label: 'Diagnostic / software issue', dealer: [150, 450], indy: [100, 350], access: 'Moderate', warrantyRelevant: false }
   };
 
-  const ACCESS_NOTES = {
-    High: 'Typical independent parts access: High. This is largely a standard automotive part or service, widely available outside the dealer network.',
-    Moderate: 'Typical independent parts access: Moderate. Some shops have the parts and tools for this, availability depends on your manufacturer and region.',
-    Limited: 'Typical independent parts access: Limited. This part is often proprietary and may only be available through the dealer network, depending on your manufacturer and region.'
+  // Remanufactured/aftermarket parts sourced to Recurrent Auto's finding that third-party
+  // remanufactured battery packs undercut OEM by roughly 30-50%. Dealers install OEM only.
+  const REMAN_DISCOUNT = { low: 0.5, high: 0.7 };
+
+  // Charging port: hardware vs. onboard module is a real difference in repair scope, not just a
+  // cost multiplier. Hardware range matches published door/connector parts pricing; the module
+  // range is intentionally wide since little public cost data exists for that specific repair.
+  const PORT_ISSUE = {
+    hardware: { dealer: [250, 700], indy: [150, 500], access: 'Moderate' },
+    module:   { dealer: [600, 2000], indy: [400, 1500], access: 'Limited' }
   };
+
+  // Standard automotive repair-cost structuring: front axle and full pads+rotors service cost
+  // more than rear axle or pads-only. Not EV-specific.
+  const AXLE_MULT = { front: 1.0, rear: 0.75 };
+  const SERVICE_MULT = { pads_rotors: 1.0, pads_only: 0.55 };
+
+  // Air suspension is well documented as meaningfully more expensive to service than standard
+  // suspension; EV-specific figures aren't well published, so this widens rather than pretending
+  // precision.
+  const SUSPENSION_MULT = { standard: [1.0, 1.0], air: [1.8, 2.8] };
+
+  const ACCESS_NOTES = {
+    High: 'This is largely a standard automotive part or service, widely available outside the dealer network.',
+    Moderate: 'Some shops have the parts and tools for this, availability depends on your manufacturer and region.',
+    Limited: 'This part is often proprietary and may only be available through the dealer network, depending on your manufacturer and region.'
+  };
+
+  function updateSubFields() {
+    const key = $('repairType').value;
+    const repair = REPAIRS[key];
+    $('partsTypeField').style.display = repair.sub === 'parts' ? 'block' : 'none';
+    $('portIssueField').style.display = repair.sub === 'port' ? 'block' : 'none';
+    $('brakeOptionsField').style.display = repair.sub === 'brakes' ? 'grid' : 'none';
+    $('suspensionTypeField').style.display = repair.sub === 'suspension' ? 'block' : 'none';
+  }
 
   function calc() {
     const repairKey = $('repairType').value;
@@ -366,11 +445,53 @@
     const age = Math.max(0, parseFloat($('age').value) || 0);
     const mileage = Math.max(0, parseFloat($('mileage').value) || 0);
 
-    $('repairLabel').textContent = repair.label + ' — estimated cost range';
-    $('dealerRange').textContent = fmt(repair.dealer[0]) + '–' + fmt(repair.dealer[1]);
-    $('indyRange').textContent = fmt(repair.indy[0]) + '–' + fmt(repair.indy[1]);
+    let dealerRange, indyRange, access, labelSuffix = '';
 
-    $('accessNote').innerHTML = '<strong>' + repair.access + ' access.</strong> ' + ACCESS_NOTES[repair.access].replace('Typical independent parts access: ' + repair.access + '. ', '');
+    if (repair.sub === 'parts') {
+      const partsType = $('partsType').value;
+      dealerRange = repair.dealer;
+      if (partsType === 'reman') {
+        indyRange = [repair.indyOEM[0] * REMAN_DISCOUNT.low, repair.indyOEM[1] * REMAN_DISCOUNT.high];
+        access = 'Moderate';
+        labelSuffix = ' (remanufactured/aftermarket)';
+      } else {
+        indyRange = repair.indyOEM;
+        access = repair.access;
+        labelSuffix = ' (OEM)';
+      }
+    } else if (repair.sub === 'port') {
+      const issue = $('portIssue').value;
+      const r = PORT_ISSUE[issue];
+      dealerRange = r.dealer;
+      indyRange = r.indy;
+      access = r.access;
+      labelSuffix = issue === 'module' ? ' (possible onboard module)' : ' (door/connector hardware)';
+    } else if (repair.sub === 'brakes') {
+      const axle = $('brakeAxle').value;
+      const service = $('brakeService').value;
+      const mult = AXLE_MULT[axle] * SERVICE_MULT[service];
+      dealerRange = [repair.dealer[0] * mult, repair.dealer[1] * mult];
+      indyRange = [repair.indy[0] * mult, repair.indy[1] * mult];
+      access = repair.access;
+      labelSuffix = ' (' + (axle === 'front' ? 'front' : 'rear') + ', ' + (service === 'pads_rotors' ? 'pads + rotors' : 'pads only') + ')';
+    } else if (repair.sub === 'suspension') {
+      const type = $('suspensionType').value;
+      const mult = SUSPENSION_MULT[type];
+      dealerRange = [repair.dealer[0] * mult[0], repair.dealer[1] * mult[1]];
+      indyRange = [repair.indy[0] * mult[0], repair.indy[1] * mult[1]];
+      access = repair.access;
+      labelSuffix = type === 'air' ? ' (air suspension)' : ' (standard)';
+    } else {
+      dealerRange = repair.dealer;
+      indyRange = repair.indy;
+      access = repair.access;
+    }
+
+    $('repairLabel').textContent = repair.label + labelSuffix + ' — estimated cost range';
+    $('dealerRange').textContent = fmt(dealerRange[0]) + '–' + fmt(dealerRange[1]);
+    $('indyRange').textContent = fmt(indyRange[0]) + '–' + fmt(indyRange[1]);
+
+    $('accessNote').innerHTML = '<strong>' + access + ' access.</strong> ' + ACCESS_NOTES[access];
 
     const warrantyNoteEl = $('warrantyNote');
     if (repair.warrantyRelevant) {
@@ -384,7 +505,9 @@
     }
   }
 
+  $('repairType').addEventListener('change', updateSubFields);
   document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calc));
+  updateSubFields();
   calc();
 </script>
 

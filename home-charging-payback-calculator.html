@@ -12,10 +12,12 @@
   "@type": "HowTo",
   "name": "How to calculate home EV charger payback",
   "step": [
-    { "@type": "HowToStep", "name": "Enter your charger and install cost", "text": "Enter the total one-time cost of the Level 2 charger and its installation." },
+    { "@type": "HowToStep", "name": "Select a charger type", "text": "Choose a household outlet or a Level 2 charger tier to fill in a typical cost and charging power, then adjust to match your own quote." },
+    { "@type": "HowToStep", "name": "Enter your charger and install cost", "text": "Enter the total one-time cost of the charger and its installation." },
     { "@type": "HowToStep", "name": "Enter your public charging rate", "text": "Enter what you currently pay per kWh at public charging stations." },
     { "@type": "HowToStep", "name": "Enter your home electricity rate", "text": "Enter your home electricity rate in dollars per kWh from a recent utility bill." },
-    { "@type": "HowToStep", "name": "Enter your monthly charging volume", "text": "Enter how many kWh you'd charge at home per month." }
+    { "@type": "HowToStep", "name": "Enter your monthly charging volume", "text": "Enter how many kWh you'd charge at home per month." },
+    { "@type": "HowToStep", "name": "Enter your vehicle's efficiency and charging limit", "text": "Enter your vehicle's efficiency and its maximum onboard AC charging rate to see charging speed, not just cost." }
   ]
 }
 </script>
@@ -38,6 +40,14 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Check your charging network's app or past session receipts for the per-kWh (or per-minute) price you were charged. Public charging pricing varies by network, location, and membership tier, and some networks price by time instead of energy, so use your own recent sessions rather than a general assumption."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does a higher-amperage charger always charge faster?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not necessarily. Your actual charging speed is capped by whichever is lower, the charger's power output or your vehicle's own onboard AC charging limit. Most EVs cap onboard AC charging somewhere between 7.2 kW and 11.5 kW, some higher, so paying for a charger that exceeds your vehicle's limit doesn't add any more speed for that vehicle."
       }
     },
     {
@@ -123,12 +133,14 @@
   .card h2 { font-family: 'IBM Plex Mono', monospace; font-size: 1.1rem; font-weight: 700; margin: 0 0 18px; }
 
   .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 4px; }
+  .field-full { grid-column: 1 / -1; }
+  .section-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); font-weight: 600; margin: 22px 0 14px; padding-top: 18px; border-top: 1px solid var(--border); }
 
   .field { margin-bottom: 16px; }
   .field label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
   .field .hint { font-size: 0.78rem; color: var(--ink-soft); font-weight: 400; margin-top: 4px; }
 
-  input[type="number"] {
+  input[type="number"], select {
     width: 100%;
     padding: 11px 12px;
     font-size: 1rem;
@@ -139,7 +151,7 @@
     color: var(--ink);
   }
 
-  input[type="number"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  input[type="number"]:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
 
   .ledger { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 24px; }
   .ledger-head { padding: 20px 26px 4px; }
@@ -199,6 +211,16 @@
   <div class="card">
     <h2>Your numbers</h2>
     <div class="field-grid">
+      <div class="field field-full">
+        <label for="chargerType">Charger type</label>
+        <select id="chargerType">
+          <option value="0" data-kw="1.4">Level 1 — standard household outlet</option>
+          <option value="1200" data-kw="7.7" selected>Level 2 — standard (32A)</option>
+          <option value="2000" data-kw="11.5">Level 2 — high-power (48A)</option>
+          <option value="2800" data-kw="14.4">Level 2 — high-power (60A)</option>
+        </select>
+        <div class="hint">Fills in a typical cost and power below, both editable.</div>
+      </div>
       <div class="field">
         <label for="chargerCost">Charger + install cost</label>
         <input type="number" id="chargerCost" value="1200" min="0" step="50">
@@ -217,6 +239,19 @@
         <label for="monthlyKwh">Monthly charging (kWh)</label>
         <input type="number" id="monthlyKwh" value="300" min="0" step="10">
         <div class="hint">Roughly monthly miles &times; kWh per 100 miles &divide; 100, or check your utility bill if metered separately.</div>
+      </div>
+    </div>
+
+    <div class="section-label">Vehicle charging speed</div>
+    <div class="field-grid">
+      <div class="field">
+        <label for="vehicleEfficiency">Vehicle efficiency (miles/kWh)</label>
+        <input type="number" id="vehicleEfficiency" value="3.5" min="0.1" step="0.1">
+      </div>
+      <div class="field">
+        <label for="vehicleMaxKw">Vehicle's max AC charging rate (kW)</label>
+        <input type="number" id="vehicleMaxKw" value="11.5" min="0.1" step="0.1">
+        <div class="hint">Check your owner's manual, most EVs cap between 7.2 and 11.5 kW onboard.</div>
       </div>
     </div>
   </div>
@@ -244,6 +279,16 @@
     </div>
   </div>
 
+  <div class="ledger">
+    <div class="ledger-head"><div class="eyebrow">Charging speed at this setup</div></div>
+    <div class="col">
+      <div class="line"><span>Effective charging power</span><span id="effectivePower">—</span></div>
+      <div class="line total"><span>Range added per hour</span><span id="rangePerHour">—</span></div>
+      <div class="line"><span>vs. standard household outlet</span><span id="level1RangePerHour">—</span></div>
+    </div>
+    <div class="breakeven" id="speedSummary"></div>
+  </div>
+
   <!-- Below Results Ad -->
   <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="9334818123" data-ad-format="auto" data-full-width-responsive="true"></ins>
   <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
@@ -257,6 +302,9 @@
 
     <h3>Finding your public charging rate</h3>
     <p>Check your charging network's app or past session receipts for the per-kWh (or per-minute) price you were charged. Public charging pricing varies by network, location, and membership tier, and some networks price by time instead of energy, so use your own recent sessions rather than a general assumption.</p>
+
+    <h3>Why charging speed matters, not just cost</h3>
+    <p>A standard 120V household outlet delivers around 1.4 kW, which adds only a few miles of range per hour, often not enough to fully recharge overnight after a longer day of driving. A Level 2 charger runs on a 240V circuit and delivers anywhere from about 7.7 kW to 14.4 kW depending on the circuit's amperage, cutting charging time dramatically. Your actual speed is capped by whichever is lower, the charger's output or your vehicle's own onboard AC charging limit, so a higher-amperage charger doesn't help if your vehicle can't accept that much power.</p>
 
     <h3>What this doesn't account for</h3>
     <p>This doesn't account for electricity rate changes over the years, any panel upgrade cost beyond what you enter, or utility EV charging incentive rates and rebates that some utilities offer. It also doesn't weigh the convenience of public fast charging against the slower overnight charging a home Level 2 charger provides, which is a real factor beyond the dollar cost.</p>
@@ -277,6 +325,10 @@
       <p>Check your charging network's app or past session receipts for the per-kWh (or per-minute) price you were charged. Public charging pricing varies by network, location, and membership tier, and some networks price by time instead of energy, so use your own recent sessions rather than a general assumption.</p>
     </div>
     <div class="faq-item">
+      <h3>Does a higher-amperage charger always charge faster?</h3>
+      <p>Not necessarily. Your actual charging speed is capped by whichever is lower, the charger's power output or your vehicle's own onboard AC charging limit. Most EVs cap onboard AC charging somewhere between 7.2 kW and 11.5 kW, some higher, so paying for a charger that exceeds your vehicle's limit doesn't add any more speed for that vehicle.</p>
+    </div>
+    <div class="faq-item">
       <h3>What doesn't this calculator account for?</h3>
       <p>This doesn't account for electricity rate changes over the years, any panel upgrade cost beyond what you enter, or utility EV charging incentive rates and rebates that some utilities offer. It also doesn't weigh the convenience of public fast charging against the slower overnight charging a home Level 2 charger provides, which is a real factor beyond the dollar cost.</p>
     </div>
@@ -293,11 +345,19 @@
   const $ = id => document.getElementById(id);
   const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
 
+  $('chargerType').addEventListener('change', () => {
+    const opt = $('chargerType').selectedOptions[0];
+    $('chargerCost').value = opt.value;
+    calc();
+  });
+
   function calc() {
     const chargerCost = Math.max(0, parseFloat($('chargerCost').value) || 0);
     const publicRate = Math.max(0, parseFloat($('publicRate').value) || 0);
     const homeRate = Math.max(0, parseFloat($('homeRate').value) || 0);
     const monthlyKwh = Math.max(0, parseFloat($('monthlyKwh').value) || 0);
+    const vehicleEfficiency = Math.max(0.1, parseFloat($('vehicleEfficiency').value) || 0.1);
+    const vehicleMaxKw = Math.max(0.1, parseFloat($('vehicleMaxKw').value) || 0.1);
 
     const publicCost = monthlyKwh * publicRate;
     const homeCost = monthlyKwh * homeRate;
@@ -327,6 +387,27 @@
 
     $('tblCost').textContent = fmt(chargerCost);
     $('tblSavings').textContent = fmt(monthlySavings) + '/mo';
+
+    const chargerKw = parseFloat($('chargerType').selectedOptions[0].dataset.kw) || 0;
+    const level1Kw = 1.4;
+    const effectiveKw = Math.min(chargerKw, vehicleMaxKw);
+    const level1EffectiveKw = Math.min(level1Kw, vehicleMaxKw);
+    const rangePerHour = effectiveKw * vehicleEfficiency;
+    const level1RangePerHour = level1EffectiveKw * vehicleEfficiency;
+
+    $('effectivePower').textContent = effectiveKw.toFixed(1) + ' kW';
+    $('rangePerHour').textContent = '~' + Math.round(rangePerHour) + ' mi/hr';
+    $('level1RangePerHour').textContent = '~' + Math.round(level1RangePerHour) + ' mi/hr';
+
+    const dailyKwh = monthlyKwh / 30;
+    const speedSummaryEl = $('speedSummary');
+    if (dailyKwh > 0) {
+      const hoursAtThisSetup = dailyKwh / effectiveKw;
+      const hoursAtLevel1 = dailyKwh / level1EffectiveKw;
+      speedSummaryEl.innerHTML = 'Recharging a typical day\'s driving (~' + Math.round(dailyKwh) + ' kWh) takes about <strong>' + hoursAtThisSetup.toFixed(1) + ' hours</strong> at this power level, versus about <strong>' + Math.round(hoursAtLevel1) + ' hours</strong> on a standard household outlet.';
+    } else {
+      speedSummaryEl.innerHTML = '';
+    }
   }
 
   document.querySelectorAll('input').forEach(el => el.addEventListener('input', calc));

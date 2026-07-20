@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home EV Charger Payback Calculator — Level 2 Install Breakeven vs. Public Charging</title>
+<meta name="description" content="See how many months it takes a home Level 2 charger and install to pay for itself versus what you're currently paying for public charging.">
+<link rel="canonical" href="https://pf-builds.github.io/evmath/home-charging-payback-calculator.html">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to calculate home EV charger payback",
+  "step": [
+    { "@type": "HowToStep", "name": "Enter your charger and install cost", "text": "Enter the total one-time cost of the Level 2 charger and its installation." },
+    { "@type": "HowToStep", "name": "Enter your public charging rate", "text": "Enter what you currently pay per kWh at public charging stations." },
+    { "@type": "HowToStep", "name": "Enter your home electricity rate", "text": "Enter your home electricity rate in dollars per kWh from a recent utility bill." },
+    { "@type": "HowToStep", "name": "Enter your monthly charging volume", "text": "Enter how many kWh you'd charge at home per month." }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How much does a Level 2 charger and install actually cost?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "This varies widely. The charger itself is commonly a few hundred dollars, but installation depends on how far the charger is from your electrical panel and whether the panel has enough spare capacity, a straightforward install can be a few hundred dollars while one requiring a panel upgrade can run well over $2,000. The U.S. Department of Energy's Alternative Fuels Data Center has general background on home charging equipment. Get a local electrician's quote for an accurate number."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I find what I currently pay for public charging?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Check your charging network's app or past session receipts for the per-kWh (or per-minute) price you were charged. Public charging pricing varies by network, location, and membership tier, and some networks price by time instead of energy, so use your own recent sessions rather than a general assumption."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What doesn't this calculator account for?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "This doesn't account for electricity rate changes over the years, any panel upgrade cost beyond what you enter, or utility EV charging incentive rates and rebates that some utilities offer. It also doesn't weigh the convenience of public fast charging against the slower overnight charging a home Level 2 charger provides, which is a real factor beyond the dollar cost."
+      }
+    }
+  ]
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #12181C;
+    --panel: #182228;
+    --border: #263038;
+    --accent: #1FB8CD;
+    --accent-bg: rgba(31, 184, 205, 0.08);
+    --ink: #E8EEF1;
+    --ink-soft: #8FA0A8;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
+  .site-nav .brand-link { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; text-decoration: none; font-size: 0.95rem; }
+  .site-nav .sep { color: var(--border); }
+
+  .tools-dropdown { position: relative; }
+  .tools-dropdown summary { cursor: pointer; color: var(--ink-soft); list-style: none; font-weight: 600; }
+  .tools-dropdown summary::-webkit-details-marker { display: none; }
+  .tools-dropdown summary:hover { color: var(--accent); }
+  .tools-menu {
+    position: absolute; top: 100%; left: 0; margin-top: 8px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px; display: flex; flex-direction: column; min-width: 240px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 10;
+  }
+  .tools-menu a { padding: 8px 10px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 0.82rem; }
+  .tools-menu a:hover { background: var(--accent-bg); color: var(--accent); }
+
+  header { margin-bottom: 32px; }
+
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    line-height: 1.2;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+
+  .sub { color: var(--ink-soft); font-size: 1.02rem; max-width: 58ch; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 26px; margin-bottom: 22px; }
+  .card h2 { font-family: 'IBM Plex Mono', monospace; font-size: 1.1rem; font-weight: 700; margin: 0 0 18px; }
+
+  .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 4px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field .hint { font-size: 0.78rem; color: var(--ink-soft); font-weight: 400; margin-top: 4px; }
+
+  input[type="number"] {
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 1rem;
+    font-family: 'IBM Plex Mono', monospace;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  input[type="number"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+
+  .ledger { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 24px; }
+  .ledger-head { padding: 20px 26px 4px; }
+  .ledger-head .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); font-weight: 600; }
+
+  .col { padding: 16px 26px 20px; border-top: 1px solid var(--border); background: var(--accent-bg); }
+
+  .line { display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; padding: 5px 0; color: var(--ink-soft); }
+  .line.total { border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 10px; font-weight: 700; color: var(--accent); font-size: 1.02rem; }
+
+  .breakeven { padding: 20px 26px; border-top: 1px solid var(--border); font-size: 1rem; }
+  .breakeven strong { font-family: 'IBM Plex Mono', monospace; color: var(--accent); }
+
+  .timeline { padding: 18px 26px 22px; border-top: 1px solid var(--border); }
+  .timeline table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  .timeline th, .timeline td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); font-family: 'IBM Plex Mono', monospace; color: var(--ink); }
+  .timeline th { font-family: 'Inter', sans-serif; font-weight: 600; color: var(--ink-soft); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  section.explain { margin-top: 44px; }
+  section.explain h2 { font-family: 'IBM Plex Mono', monospace; font-size: 1.25rem; margin: 0 0 14px; }
+  section.explain h3 { font-family: 'IBM Plex Mono', monospace; font-size: 1rem; margin: 22px 0 8px; }
+  section.explain p { color: var(--ink-soft); font-size: 0.96rem; }
+
+  section.faq { margin-top: 44px; }
+  section.faq h2 { font-family: 'IBM Plex Mono', monospace; font-size: 1.25rem; margin: 0 0 14px; }
+  .faq-item { margin-bottom: 18px; }
+  .faq-item h3 { font-family: 'IBM Plex Mono', monospace; font-size: 0.98rem; margin: 0 0 6px; color: var(--ink); }
+  .faq-item p { color: var(--ink-soft); font-size: 0.94rem; margin: 0; }
+
+  footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 0.82rem; color: var(--ink-soft); }
+  footer a { color: var(--ink-soft); }
+</style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6054690102277779" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="wrap">
+<nav class="site-nav">
+  <a href="index.html" class="brand-link">EVMath</a>
+  <span class="sep">·</span>
+  <details class="tools-dropdown">
+    <summary>All calculators &#9662;</summary>
+    <div class="tools-menu">
+      <a href="charging-cost-per-mile-calculator.html">Charging cost per mile</a>
+      <a href="ev-vs-gas-tco-calculator.html">EV vs. gas TCO</a>
+      <a href="home-charging-payback-calculator.html">Home charging payback</a>
+      <a href="battery-replacement-cost-calculator.html">Battery replacement</a>
+      <a href="ev-repair-cost-estimator.html">EV repair costs</a>
+    </div>
+  </details>
+</nav>
+
+  <header>
+    <h1>How fast does a home charger pay for itself?</h1>
+    <p class="sub">Compare your home electricity rate against what you're paying for public charging, and see how many months it takes the charger and install cost to break even.</p>
+  </header>
+
+  <div class="card">
+    <h2>Your numbers</h2>
+    <div class="field-grid">
+      <div class="field">
+        <label for="chargerCost">Charger + install cost</label>
+        <input type="number" id="chargerCost" value="1200" min="0" step="50">
+        <div class="hint">One-time. See the FAQ below for what drives this cost.</div>
+      </div>
+      <div class="field">
+        <label for="publicRate">Public charging rate ($/kWh)</label>
+        <input type="number" id="publicRate" value="0.43" min="0" step="0.01">
+        <div class="hint">Check your charging network's app for your actual rate.</div>
+      </div>
+      <div class="field">
+        <label for="homeRate">Home electricity rate ($/kWh)</label>
+        <input type="number" id="homeRate" value="0.16" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label for="monthlyKwh">Monthly charging (kWh)</label>
+        <input type="number" id="monthlyKwh" value="300" min="0" step="10">
+        <div class="hint">Roughly monthly miles &times; kWh per 100 miles &divide; 100, or check your utility bill if metered separately.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head"><div class="eyebrow">Monthly cost, at this charging volume</div></div>
+
+    <div class="col">
+      <div class="line"><span>Public charging cost</span><span id="publicCost">—</span></div>
+      <div class="line"><span>Home charging cost</span><span id="homeCost">—</span></div>
+      <div class="line total"><span>Monthly savings</span><span id="monthlySavings">—</span></div>
+    </div>
+
+    <div class="breakeven" id="breakeven"></div>
+
+    <div class="timeline">
+      <table>
+        <tr><th>Charger + install</th><th>Monthly savings</th><th>Breakeven</th></tr>
+        <tr>
+          <td id="tblCost">—</td>
+          <td id="tblSavings">—</td>
+          <td id="tblBreakeven">—</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Below Results Ad -->
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="9334818123" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+  <section class="explain">
+    <h2>How this is calculated</h2>
+    <p>Monthly savings is your monthly charging volume multiplied by the difference between your public and home electricity rates. Breakeven is the charger and install cost divided by that monthly savings, the number of months until the install has paid for itself compared to continuing to charge publicly.</p>
+
+    <h3>What drives install cost</h3>
+    <p>The charger itself is commonly a few hundred dollars, but installation depends on how far the charger is from your electrical panel and whether the panel has enough spare capacity. A straightforward install can be a few hundred dollars; one requiring a panel upgrade can run well over $2,000. The U.S. Department of Energy's Alternative Fuels Data Center has general background on home charging equipment, but a local electrician's quote is the only way to get an accurate number for your home.</p>
+
+    <h3>Finding your public charging rate</h3>
+    <p>Check your charging network's app or past session receipts for the per-kWh (or per-minute) price you were charged. Public charging pricing varies by network, location, and membership tier, and some networks price by time instead of energy, so use your own recent sessions rather than a general assumption.</p>
+
+    <h3>What this doesn't account for</h3>
+    <p>This doesn't account for electricity rate changes over the years, any panel upgrade cost beyond what you enter, or utility EV charging incentive rates and rebates that some utilities offer. It also doesn't weigh the convenience of public fast charging against the slower overnight charging a home Level 2 charger provides, which is a real factor beyond the dollar cost.</p>
+  </section>
+
+  <!-- Between Explainer and FAQ Ad -->
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="9334818123" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+  <section class="faq">
+    <h2>Frequently asked</h2>
+    <div class="faq-item">
+      <h3>How much does a Level 2 charger and install actually cost?</h3>
+      <p>This varies widely. The charger itself is commonly a few hundred dollars, but installation depends on how far the charger is from your electrical panel and whether the panel has enough spare capacity, a straightforward install can be a few hundred dollars while one requiring a panel upgrade can run well over $2,000. The U.S. Department of Energy's Alternative Fuels Data Center has general background on home charging equipment. Get a local electrician's quote for an accurate number.</p>
+    </div>
+    <div class="faq-item">
+      <h3>How do I find what I currently pay for public charging?</h3>
+      <p>Check your charging network's app or past session receipts for the per-kWh (or per-minute) price you were charged. Public charging pricing varies by network, location, and membership tier, and some networks price by time instead of energy, so use your own recent sessions rather than a general assumption.</p>
+    </div>
+    <div class="faq-item">
+      <h3>What doesn't this calculator account for?</h3>
+      <p>This doesn't account for electricity rate changes over the years, any panel upgrade cost beyond what you enter, or utility EV charging incentive rates and rebates that some utilities offer. It also doesn't weigh the convenience of public fast charging against the slower overnight charging a home Level 2 charger provides, which is a real factor beyond the dollar cost.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>EVMath provides general estimates based on public data and typical assumptions. It does not constitute automotive, financial, or purchasing advice. Confirm your vehicle's actual specifications and current local rates before making a purchase or repair decision.</p>
+    <p><a href="index.html">Home</a> &middot; <a href="privacy.html">Privacy policy</a></p>
+  </footer>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+
+  function calc() {
+    const chargerCost = Math.max(0, parseFloat($('chargerCost').value) || 0);
+    const publicRate = Math.max(0, parseFloat($('publicRate').value) || 0);
+    const homeRate = Math.max(0, parseFloat($('homeRate').value) || 0);
+    const monthlyKwh = Math.max(0, parseFloat($('monthlyKwh').value) || 0);
+
+    const publicCost = monthlyKwh * publicRate;
+    const homeCost = monthlyKwh * homeRate;
+    const monthlySavings = publicCost - homeCost;
+
+    $('publicCost').textContent = fmt(publicCost) + '/mo';
+    $('homeCost').textContent = fmt(homeCost) + '/mo';
+    $('monthlySavings').textContent = fmt(monthlySavings) + '/mo';
+
+    const breakevenEl = $('breakeven');
+    const tblBreakeven = $('tblBreakeven');
+
+    if (monthlySavings > 0) {
+      const breakevenMonths = chargerCost / monthlySavings;
+      const breakevenText = breakevenMonths < 1
+        ? 'less than a month'
+        : Math.round(breakevenMonths) + ' month' + (Math.round(breakevenMonths) === 1 ? '' : 's') + ' (about ' + (breakevenMonths / 12).toFixed(1) + ' years)';
+      breakevenEl.innerHTML = 'At this charging volume, your <strong>' + fmt(chargerCost) + '</strong> charger and install pays for itself in <strong>' + breakevenText + '</strong>.';
+      tblBreakeven.textContent = breakevenText;
+    } else if (monthlySavings === 0) {
+      breakevenEl.innerHTML = 'At these rates, home and public charging cost the same, there\'s no dollar payback from installing a home charger.';
+      tblBreakeven.textContent = 'No savings at these rates';
+    } else {
+      breakevenEl.innerHTML = 'At these rates, home charging costs more per kWh than public charging, so there\'s no payback from installing a home charger based on cost alone.';
+      tblBreakeven.textContent = 'No payback at these rates';
+    }
+
+    $('tblCost').textContent = fmt(chargerCost);
+    $('tblSavings').textContent = fmt(monthlySavings) + '/mo';
+  }
+
+  document.querySelectorAll('input').forEach(el => el.addEventListener('input', calc));
+  calc();
+</script>
+
+</body>
+</html>

@@ -26,6 +26,22 @@
   "mainEntity": [
     {
       "@type": "Question",
+      "name": "How do I find my actual electricity rate?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Check a recent electric bill for the total price per kWh. Some utilities show one blended rate, others break it into generation and delivery charges that need to be added together. If your utility offers time-of-use pricing, use the rate for whenever you'd actually charge, off-peak overnight rates are often significantly lower and worth checking for. Your utility's website or customer portal usually has this listed per kWh."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I find my vehicle's efficiency?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The EPA rating in miles/kWh or kWh/100 miles is on the window sticker (Monroney label) or can be looked up for your exact trim at fueleconomy.gov. For a more accurate number, your vehicle's trip computer or a charging app's session history reflects your actual driving and climate, which is usually more accurate than the label rating."
+      }
+    },
+    {
+      "@type": "Question",
       "name": "Why does this use miles/kWh or kWh/100mi instead of MPGe?",
       "acceptedAnswer": {
         "@type": "Answer",
@@ -122,7 +138,7 @@
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 26px; margin-bottom: 22px; }
   .card h2 { font-family: 'IBM Plex Mono', monospace; font-size: 1.1rem; font-weight: 700; margin: 0 0 18px; }
 
-  .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 4px; }
+  .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 4px; }
 
   .field { margin-bottom: 16px; }
   .field label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
@@ -295,6 +311,14 @@
 
   <section class="faq">
     <h2>Frequently asked</h2>
+    <div class="faq-item">
+      <h3>How do I find my actual electricity rate?</h3>
+      <p>Check a recent electric bill for the total price per kWh. Some utilities show one blended rate, others break it into generation and delivery charges that need to be added together. If your utility offers time-of-use pricing, use the rate for whenever you'd actually charge, off-peak overnight rates are often significantly lower and worth checking for. Your utility's website or customer portal usually has this listed per kWh.</p>
+    </div>
+    <div class="faq-item">
+      <h3>How do I find my vehicle's efficiency?</h3>
+      <p>The EPA rating in miles/kWh or kWh/100 miles is on the window sticker (Monroney label) or can be looked up for your exact trim at fueleconomy.gov. For a more accurate number, your vehicle's trip computer or a charging app's session history reflects your actual driving and climate, which is usually more accurate than the label rating.</p>
+    </div>
     <div class="faq-item">
       <h3>Why does this use miles/kWh or kWh/100mi instead of MPGe?</h3>
       <p>MPGe converts electricity into a gasoline-equivalent unit for EPA label comparisons, but it doesn't translate directly into a dollar cost. Miles per kWh (or kWh per 100 miles) multiplied by your actual electricity rate gives a real cost per mile, which is what this calculator is built around.</p>

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EV Repair Cost Estimator — Dealer vs. Independent Shop Ranges</title>
+<meta name="description" content="Estimate a sourced cost range for common EV-specific repairs at a dealer versus an independent shop, based on published repair-cost comparisons, with a clear caveat on how parts access varies by manufacturer and region.">
+<link rel="canonical" href="https://pf-builds.github.io/evmath/ev-repair-cost-estimator.html">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to estimate EV repair cost at a dealer vs. an independent shop",
+  "step": [
+    { "@type": "HowToStep", "name": "Select a repair type", "text": "Select the type of repair from common EV-specific categories." },
+    { "@type": "HowToStep", "name": "Enter your vehicle's mileage", "text": "Enter your vehicle's current odometer mileage." },
+    { "@type": "HowToStep", "name": "Enter your vehicle's age", "text": "Enter how many years old your vehicle is, used to note whether the repair may fall inside a typical warranty window." }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Where do these cost ranges come from?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "These are wide, generalized ranges assembled from published repair cost comparisons, not a quote from a labor rate database or parts catalog for your specific vehicle. Independent-versus-dealer savings of roughly 20-40% for comparable labor are consistent with multiple published comparisons, including Consumer Reports' repair shop survey. Brake service figures are consistent with published brake repair cost guides. Drive unit and battery module figures reflect the wide spread reported publicly across vehicle classes, from compact EVs to premium ones, since cost scales heavily with vehicle class. None of this is specific to any one manufacturer, always confirm with a real quote."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why is independent shop pricing sometimes not much cheaper?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Labor rates are often lower at independent shops, but many EV-specific parts, especially battery modules and drive units, are proprietary and either unavailable outside the dealer network or must still be sourced through the dealer regardless of where the labor happens. That narrows or eliminates the savings for those particular repair types."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does parts availability vary so much by manufacturer and region?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Some manufacturers make EV-specific parts and diagnostic tools available to independent and aftermarket shops, others largely restrict them to their own dealer network. This varies further by whether a given independent shop has invested in EV-specific training and equipment, and by region as the used and aftermarket EV parts market matures unevenly."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does using an independent shop void my EV's warranty?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Under the federal Magnuson-Moss Warranty Act, a manufacturer cannot void your vehicle's warranty solely because you used an independent shop for a repair unrelated to a warranty claim. Having brakes or suspension serviced independently, for example, cannot legally void a separate battery or drivetrain warranty. It's still worth confirming with your specific manufacturer's warranty terms."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What doesn't this calculator account for?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "This doesn't account for whether the repair might be covered under your vehicle's warranty, check your specific coverage before assuming you'll pay out of pocket. It also doesn't include towing or a rental car, and it uses general cost ranges rather than a quote for your specific vehicle. Always get an actual quote before committing to a repair."
+      }
+    }
+  ]
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #12181C;
+    --panel: #182228;
+    --border: #263038;
+    --accent: #1FB8CD;
+    --accent-bg: rgba(31, 184, 205, 0.08);
+    --ink: #E8EEF1;
+    --ink-soft: #8FA0A8;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); }
+
+  .wrap { max-width: 800px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
+  .site-nav .brand-link { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; text-decoration: none; font-size: 0.95rem; }
+  .site-nav .sep { color: var(--border); }
+
+  .tools-dropdown { position: relative; }
+  .tools-dropdown summary { cursor: pointer; color: var(--ink-soft); list-style: none; font-weight: 600; }
+  .tools-dropdown summary::-webkit-details-marker { display: none; }
+  .tools-dropdown summary:hover { color: var(--accent); }
+  .tools-menu {
+    position: absolute; top: 100%; left: 0; margin-top: 8px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px; display: flex; flex-direction: column; min-width: 240px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 10;
+  }
+  .tools-menu a { padding: 8px 10px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 0.82rem; }
+  .tools-menu a:hover { background: var(--accent-bg); color: var(--accent); }
+
+  header { margin-bottom: 32px; }
+
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    line-height: 1.2;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+
+  .sub { color: var(--ink-soft); font-size: 1.02rem; max-width: 60ch; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 26px; margin-bottom: 22px; }
+  .card h2 { font-family: 'IBM Plex Mono', monospace; font-size: 1.1rem; font-weight: 700; margin: 0 0 18px; }
+
+  .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 4px; }
+  .field-full { grid-column: 1 / -1; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field .hint { font-size: 0.78rem; color: var(--ink-soft); font-weight: 400; margin-top: 4px; }
+
+  input[type="number"], select {
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 1rem;
+    font-family: 'IBM Plex Mono', monospace;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  input[type="number"]:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+
+  .ledger { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 24px; }
+  .ledger-head { padding: 20px 26px 4px; }
+  .ledger-head .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); font-weight: 600; }
+
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+  .col { padding: 16px 24px 20px; border-top: 1px solid var(--border); }
+
+  .col-title { font-family: 'IBM Plex Mono', monospace; font-size: 1rem; margin-bottom: 10px; }
+
+  .line { display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; padding: 5px 0; color: var(--ink-soft); }
+  .line.total { border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 10px; font-weight: 700; color: var(--accent); font-size: 1.1rem; }
+
+  .access-row, .warranty-row { padding: 14px 26px; border-top: 1px solid var(--border); font-size: 0.9rem; color: var(--ink-soft); }
+  .access-row strong { color: var(--ink); font-family: 'IBM Plex Mono', monospace; }
+
+  .caveat {
+    margin: 24px 0;
+    padding: 16px 20px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--panel);
+  }
+  .caveat .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .caveat p { color: var(--ink-soft); font-size: 0.9rem; margin: 0; }
+
+  section.explain { margin-top: 44px; }
+  section.explain h2 { font-family: 'IBM Plex Mono', monospace; font-size: 1.25rem; margin: 0 0 14px; }
+  section.explain h3 { font-family: 'IBM Plex Mono', monospace; font-size: 1rem; margin: 22px 0 8px; }
+  section.explain p { color: var(--ink-soft); font-size: 0.96rem; }
+
+  section.faq { margin-top: 44px; }
+  section.faq h2 { font-family: 'IBM Plex Mono', monospace; font-size: 1.25rem; margin: 0 0 14px; }
+  .faq-item { margin-bottom: 18px; }
+  .faq-item h3 { font-family: 'IBM Plex Mono', monospace; font-size: 0.98rem; margin: 0 0 6px; color: var(--ink); }
+  .faq-item p { color: var(--ink-soft); font-size: 0.94rem; margin: 0; }
+
+  footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 0.82rem; color: var(--ink-soft); }
+  footer a { color: var(--ink-soft); }
+</style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6054690102277779" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="wrap">
+<nav class="site-nav">
+  <a href="index.html" class="brand-link">EVMath</a>
+  <span class="sep">·</span>
+  <details class="tools-dropdown">
+    <summary>All calculators &#9662;</summary>
+    <div class="tools-menu">
+      <a href="charging-cost-per-mile-calculator.html">Charging cost per mile</a>
+      <a href="ev-vs-gas-tco-calculator.html">EV vs. gas TCO</a>
+      <a href="home-charging-payback-calculator.html">Home charging payback</a>
+      <a href="battery-replacement-cost-calculator.html">Battery replacement</a>
+      <a href="ev-repair-cost-estimator.html">EV repair costs</a>
+    </div>
+  </details>
+</nav>
+
+  <header>
+    <h1>What would this repair cost, dealer vs. independent?</h1>
+    <p class="sub">A wide cost range for common EV-specific repairs at each type of shop, plus how much parts access typically varies for that repair. Not a quote, a starting point before you call around.</p>
+  </header>
+
+  <div class="card">
+    <h2>Your repair</h2>
+    <div class="field-grid">
+      <div class="field field-full">
+        <label for="repairType">Repair type</label>
+        <select id="repairType">
+          <option value="battery_module">Battery module replacement</option>
+          <option value="drive_unit">Drive unit / motor replacement</option>
+          <option value="charging_port">Charging port repair</option>
+          <option value="suspension">Suspension component replacement</option>
+          <option value="brakes">Brake pads/rotors</option>
+          <option value="battery_12v">12V auxiliary battery replacement</option>
+          <option value="diagnostic">Diagnostic / software issue</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="mileage">Current mileage</label>
+        <input type="number" id="mileage" value="40000" min="0" step="1000">
+      </div>
+      <div class="field">
+        <label for="age">Vehicle age (years)</label>
+        <input type="number" id="age" value="4" min="0" step="0.5">
+      </div>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head"><div class="eyebrow" id="repairLabel">Estimated cost range</div></div>
+
+    <div class="result-grid">
+      <div class="col">
+        <div class="col-title">Dealer / certified shop</div>
+        <div class="line total"><span>Cost range</span><span id="dealerRange">—</span></div>
+      </div>
+      <div class="col">
+        <div class="col-title">Independent shop</div>
+        <div class="line total"><span>Cost range</span><span id="indyRange">—</span></div>
+      </div>
+    </div>
+
+    <div class="access-row" id="accessNote"></div>
+    <div class="warranty-row" id="warrantyNote"></div>
+  </div>
+
+  <div class="caveat">
+    <div class="label">Sourced range, not a vehicle-specific quote</div>
+    <p>Independent-versus-dealer labor savings are consistent with multiple published comparisons, including <a href="https://www.consumerreports.org/cars/car-repair-shops/car-repair-shop-survey-chains-dealers-independents-a1071080370/" target="_blank" rel="noopener">Consumer Reports' repair shop survey</a>, which generally puts independent shops at 20-40% less than dealers for comparable labor. Brake service figures are consistent with <a href="https://www.consumeraffairs.com/automotive/cost-to-replace-brake-pads-and-rotors.html" target="_blank" rel="noopener">published brake repair cost guides</a>. None of this is specific to your make or model, actual cost depends heavily on your specific vehicle, local labor rates, and current parts pricing. Call a dealer and at least one independent EV-capable shop for real numbers before deciding.</p>
+  </div>
+
+  <!-- Below Results Ad -->
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="9334818123" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+  <section class="explain">
+    <h2>How this is calculated</h2>
+    <p>Each repair type has a cost range for a dealer or certified shop and a separate range for an independent shop. The gap between them reflects published research on labor rate differences, generally in the 20-40% range according to comparisons like <a href="https://www.consumerreports.org/cars/car-repair-shops/car-repair-shop-survey-chains-dealers-independents-a1071080370/" target="_blank" rel="noopener">Consumer Reports' repair shop survey</a>, though it narrows or disappears for repairs where independent shops have limited parts access regardless of labor rate. A parts-access note is shown alongside every range for that reason. These figures are wide by design, covering the real spread from compact EVs to premium ones, not a single vehicle.</p>
+
+    <h3>Why independent isn't always cheaper</h3>
+    <p>Labor rates are often lower at independent shops, but many EV-specific parts, especially battery modules and drive units, are proprietary and either unavailable outside the dealer network or must still be sourced through the dealer regardless of where the labor happens. That narrows or eliminates the savings for those particular repair types. Wear items like brakes, suspension components, and the 12V auxiliary battery are standard automotive parts with much wider independent availability and closer to the full published labor-rate discount.</p>
+
+    <h3>Why parts availability varies by manufacturer and region</h3>
+    <p>Some manufacturers make EV-specific parts and diagnostic tools available to independent and aftermarket shops, others largely restrict them to their own dealer network. This varies further by whether a given independent shop has invested in EV-specific training and equipment, and by region as the used and aftermarket EV parts market matures unevenly.</p>
+
+    <h3>Independent service and your warranty</h3>
+    <p>Under the federal Magnuson-Moss Warranty Act, a manufacturer cannot void your vehicle's warranty solely because you used an independent shop for a repair unrelated to a warranty claim. Having brakes or suspension serviced independently, for example, cannot legally void a separate battery or drivetrain warranty. It's still worth confirming with your specific manufacturer's warranty terms.</p>
+
+    <h3>What this doesn't account for</h3>
+    <p>This doesn't account for whether the repair might be covered under your vehicle's warranty, check your specific coverage before assuming you'll pay out of pocket. It also doesn't include towing or a rental car, and it uses general cost ranges rather than a quote for your specific vehicle. Always get an actual quote before committing to a repair.</p>
+  </section>
+
+  <!-- Between Explainer and FAQ Ad -->
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="9334818123" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+  <section class="faq">
+    <h2>Frequently asked</h2>
+    <div class="faq-item">
+      <h3>Where do these cost ranges come from?</h3>
+      <p>These are wide, generalized ranges assembled from published repair cost comparisons, not a quote from a labor rate database or parts catalog for your specific vehicle. Independent-versus-dealer savings of roughly 20-40% for comparable labor are consistent with multiple published comparisons, including <a href="https://www.consumerreports.org/cars/car-repair-shops/car-repair-shop-survey-chains-dealers-independents-a1071080370/" target="_blank" rel="noopener">Consumer Reports' repair shop survey</a>. Brake service figures are consistent with published brake repair cost guides. Drive unit and battery module figures reflect the wide spread reported publicly across vehicle classes, from compact EVs to premium ones, since cost scales heavily with vehicle class. None of this is specific to any one manufacturer, always confirm with a real quote.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Why is independent shop pricing sometimes not much cheaper?</h3>
+      <p>Labor rates are often lower at independent shops, but many EV-specific parts, especially battery modules and drive units, are proprietary and either unavailable outside the dealer network or must still be sourced through the dealer regardless of where the labor happens. That narrows or eliminates the savings for those particular repair types.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Why does parts availability vary so much by manufacturer and region?</h3>
+      <p>Some manufacturers make EV-specific parts and diagnostic tools available to independent and aftermarket shops, others largely restrict them to their own dealer network. This varies further by whether a given independent shop has invested in EV-specific training and equipment, and by region as the used and aftermarket EV parts market matures unevenly.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Does using an independent shop void my EV's warranty?</h3>
+      <p>Under the federal Magnuson-Moss Warranty Act, a manufacturer cannot void your vehicle's warranty solely because you used an independent shop for a repair unrelated to a warranty claim. Having brakes or suspension serviced independently, for example, cannot legally void a separate battery or drivetrain warranty. It's still worth confirming with your specific manufacturer's warranty terms.</p>
+    </div>
+    <div class="faq-item">
+      <h3>What doesn't this calculator account for?</h3>
+      <p>This doesn't account for whether the repair might be covered under your vehicle's warranty, check your specific coverage before assuming you'll pay out of pocket. It also doesn't include towing or a rental car, and it uses general cost ranges rather than a quote for your specific vehicle. Always get an actual quote before committing to a repair.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>EVMath provides general estimates based on public data and typical assumptions. It does not constitute automotive, financial, or purchasing advice. Confirm your vehicle's actual specifications and current local rates before making a purchase or repair decision.</p>
+    <p><a href="index.html">Home</a> &middot; <a href="privacy.html">Privacy policy</a></p>
+  </footer>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+
+  // Sourced ranges. Battery module and drive unit are derived proportionally from Recurrent Auto's
+  // real-world full-pack replacement data (~$4,000-$20,000+), which is the best available public
+  // anchor, granular module/drive-unit-only cost data isn't published at fleet scale. Brake figures
+  // are consistent with published brake repair cost guides. Dealer-vs-independent labor gap reflects
+  // the widely reported 20-40% differential (see Consumer Reports' repair shop survey, linked below).
+  // All ranges are wide on purpose to span compact through premium EVs, not one vehicle.
+  const REPAIRS = {
+    battery_module: { label: 'Battery module replacement', dealer: [1000, 8000], indy: [800, 6500], access: 'Limited', warrantyRelevant: true },
+    drive_unit:     { label: 'Drive unit / motor replacement', dealer: [3000, 15000], indy: [2500, 11000], access: 'Limited', warrantyRelevant: true },
+    charging_port:  { label: 'Charging port repair', dealer: [250, 700], indy: [150, 500], access: 'Moderate', warrantyRelevant: true },
+    suspension:     { label: 'Suspension component replacement', dealer: [500, 1600], indy: [350, 1100], access: 'High', warrantyRelevant: false },
+    brakes:         { label: 'Brake pads/rotors', dealer: [400, 900], indy: [300, 650], access: 'High', warrantyRelevant: false },
+    battery_12v:    { label: '12V auxiliary battery replacement', dealer: [250, 450], indy: [150, 350], access: 'High', warrantyRelevant: false },
+    diagnostic:     { label: 'Diagnostic / software issue', dealer: [150, 450], indy: [100, 350], access: 'Moderate', warrantyRelevant: false }
+  };
+
+  const ACCESS_NOTES = {
+    High: 'Typical independent parts access: High. This is largely a standard automotive part or service, widely available outside the dealer network.',
+    Moderate: 'Typical independent parts access: Moderate. Some shops have the parts and tools for this, availability depends on your manufacturer and region.',
+    Limited: 'Typical independent parts access: Limited. This part is often proprietary and may only be available through the dealer network, depending on your manufacturer and region.'
+  };
+
+  function calc() {
+    const repairKey = $('repairType').value;
+    const repair = REPAIRS[repairKey];
+    const age = Math.max(0, parseFloat($('age').value) || 0);
+    const mileage = Math.max(0, parseFloat($('mileage').value) || 0);
+
+    $('repairLabel').textContent = repair.label + ' — estimated cost range';
+    $('dealerRange').textContent = fmt(repair.dealer[0]) + '–' + fmt(repair.dealer[1]);
+    $('indyRange').textContent = fmt(repair.indy[0]) + '–' + fmt(repair.indy[1]);
+
+    $('accessNote').innerHTML = '<strong>' + repair.access + ' access.</strong> ' + ACCESS_NOTES[repair.access].replace('Typical independent parts access: ' + repair.access + '. ', '');
+
+    const warrantyNoteEl = $('warrantyNote');
+    if (repair.warrantyRelevant) {
+      if (age <= 8 && mileage <= 100000) {
+        warrantyNoteEl.textContent = 'This repair type is commonly covered under EV powertrain and battery warranties, which run a federal minimum of 8 years/100,000 miles in the U.S. At your vehicle\'s age and mileage, check your specific coverage before assuming you\'ll pay out of pocket.';
+      } else {
+        warrantyNoteEl.textContent = 'At this age and mileage, your vehicle is likely outside the typical 8-year/100,000-mile minimum EV powertrain and battery warranty window, so this may be a full out-of-pocket cost. Confirm your specific coverage to be sure.';
+      }
+    } else {
+      warrantyNoteEl.textContent = 'This repair type is a standard wear or service item and typically isn\'t covered by EV powertrain or battery warranties regardless of age.';
+    }
+  }
+
+  document.querySelectorAll('input, select').forEach(el => el.addEventListener('input', calc));
+  calc();
+</script>
+
+</body>
+</html>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EV Battery Degradation &amp; Replacement Cost Calculator — Estimated Range</title>
-<meta name="description" content="Estimate your EV battery's remaining capacity and a replacement cost range based on age, mileage, and chemistry, framed as a range from published research, not a false-precision number.">
+<meta name="description" content="Estimate your EV battery's remaining capacity and replacement cost from Geotab's fleet degradation study and Recurrent Auto's real-world cost data, framed as a sourced range, not a false-precision number.">
 <link rel="canonical" href="https://pf-builds.github.io/evmath/battery-replacement-cost-calculator.html">
 <script type="application/ld+json">
 {
@@ -15,7 +15,7 @@
     { "@type": "HowToStep", "name": "Enter your battery pack size", "text": "Enter your vehicle's battery pack size in kWh, found in your owner's manual or manufacturer specs." },
     { "@type": "HowToStep", "name": "Enter your current mileage", "text": "Enter your vehicle's current odometer mileage." },
     { "@type": "HowToStep", "name": "Enter your vehicle's age", "text": "Enter how many years old your vehicle is." },
-    { "@type": "HowToStep", "name": "Select a battery chemistry", "text": "Select NMC/NCA, LFP, or Not sure if you don't know which your vehicle uses." }
+    { "@type": "HowToStep", "name": "Select your charging habits", "text": "Select whether you mostly charge at home on AC power or use DC fast charging frequently, since published fleet data shows this affects degradation rate more than any other factor drivers control." }
   ]
 }
 </script>
@@ -26,18 +26,18 @@
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "How accurate is this estimate?",
+      "name": "Where do these numbers come from?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "This is a rough, illustrative range built from generally published fleet degradation research, not a model-specific prediction. Actual capacity depends heavily on climate, how often you use DC fast charging, and your specific vehicle's battery chemistry and thermal management system. Treat this as a starting point, not a diagnosis."
+        "text": "Degradation rates are drawn from Geotab's 2026 fleet study of over 22,700 EVs across 21 makes and models, which found average capacity loss of 1.5% per year for mostly AC-charged vehicles up to 3.0% per year for frequent DC fast charging, and about 82% capacity retained on average after 8 years. Replacement cost is drawn from Recurrent Auto's research on real-world installed battery replacement costs, which range from about $4,000 for smaller packs to over $20,000 for larger ones. Neither source is specific to your exact vehicle, treat the result as a sourced starting range, not a quote."
       }
     },
     {
       "@type": "Question",
-      "name": "Why does battery chemistry matter?",
+      "name": "Why do charging habits matter more than battery chemistry here?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "LFP (lithium iron phosphate) packs are broadly reported in published research to tolerate more charge cycles and degrade more slowly than NMC or NCA packs, though typically at lower energy density for the same physical size. Select Not sure if you don't know which chemistry your vehicle uses, the estimate will widen to cover both."
+        "text": "Published fleet research (Geotab) measures degradation by charging pattern, not by chemistry, so that's what this calculator's range is anchored to. Chemistry still matters in general, LFP packs are broadly reported to tolerate more charge cycles than NMC or NCA, but there isn't public fleet-scale data breaking degradation down by chemistry the way there is for charging habits, so this calculator doesn't use chemistry to change the numbers."
       }
     },
     {
@@ -45,7 +45,7 @@
       "name": "Why is the replacement cost such a wide range?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Replacement cost depends on pack size, whether the whole pack or just a module needs replacing, manufacturer versus independent labor rates, and current battery material pricing, which fluctuates. Get a quote from a dealer or a qualified independent EV shop for an accurate number specific to your vehicle."
+        "text": "Recurrent Auto's real-world data shows installed replacement cost ranging from about $4,000 for smaller packs to over $20,000 for larger ones, driven by pack size, vehicle class, whether the whole pack or just a module needs replacing, and labor rates. Get a quote from a dealer or a qualified independent EV shop for a number specific to your vehicle."
       }
     },
     {
@@ -53,7 +53,7 @@
       "name": "What doesn't this calculator account for?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Most EV batteries sold in the U.S. carry a minimum 8-year/100,000-mile warranty under federal requirements, which may cover a failing pack outright, check your specific vehicle's coverage before assuming a replacement cost applies to you. This also doesn't model partial module-level repairs, which can cost far less than a full pack replacement on packs designed to allow it."
+        "text": "Most EV batteries sold in the U.S. carry a minimum 8-year/100,000-mile warranty under federal law (Clean Air Act Section 177), which may cover a failing pack outright, check your specific vehicle's coverage before assuming a replacement cost applies to you. Recurrent Auto's research also found only about 2.5% of EVs in their tracked fleet have ever needed a replacement, full replacement is uncommon. This also doesn't model partial module-level repairs, which can cost far less than a full pack replacement on packs designed to allow it."
       }
     }
   ]
@@ -214,7 +214,7 @@
 
   <header>
     <h1>How much battery capacity is left, and what would replacement cost?</h1>
-    <p class="sub">A wide, sourced range based on your vehicle's age, mileage, and chemistry, not a false-precision single number. See the caveats below before treating this as more than a rough starting point.</p>
+    <p class="sub">A wide, sourced range based on your vehicle's age and charging habits, not a false-precision single number. See the caveats below before treating this as more than a rough starting point.</p>
   </header>
 
   <div class="card">
@@ -233,13 +233,22 @@
         <input type="number" id="vehicleAge" value="4" min="0" step="0.5">
       </div>
       <div class="field field-full">
-        <label for="chemistry">Battery chemistry</label>
+        <label for="chargingHabits">Charging habits</label>
+        <select id="chargingHabits">
+          <option value="unsure" selected>Not sure / a mix of both</option>
+          <option value="ac_mostly">Mostly home or AC charging</option>
+          <option value="fast_charging">Frequent DC fast charging</option>
+        </select>
+        <div class="hint">Published fleet data ties this to degradation rate more directly than chemistry, see the FAQ below.</div>
+      </div>
+      <div class="field field-full">
+        <label for="chemistry">Battery chemistry (informational only)</label>
         <select id="chemistry">
           <option value="unsure" selected>Not sure</option>
           <option value="nmc">NMC or NCA (most common in longer-range EVs)</option>
           <option value="lfp">LFP (lithium iron phosphate)</option>
         </select>
-        <div class="hint">Not sure? The estimate widens to cover both. Check your manufacturer's specs if you want to narrow it.</div>
+        <div class="hint">Doesn't change the numbers below, there's no public fleet-scale data to split degradation by chemistry. Shown for context only, see the FAQ.</div>
       </div>
     </div>
   </div>
@@ -254,8 +263,8 @@
   </div>
 
   <div class="caveat">
-    <div class="label">Placeholder ranges — verify before relying on this</div>
-    <p>The capacity-loss rates and per-kWh replacement cost used here are wide, general-industry approximations assembled from publicly reported EV fleet degradation research (studies of the kind published by Geotab and Recurrent Auto) and typical battery replacement cost reporting. They are not manufacturer-specific or model-specific figures. If you're making a real financial decision, get a battery health check from a dealer or independent EV shop and a specific replacement quote.</p>
+    <div class="label">Sourced range, not a vehicle-specific quote</div>
+    <p>Degradation rates are anchored to <a href="https://www.geotab.com/press-release/ev-battery-health-degradation-fast-charging-study/" target="_blank" rel="noopener">Geotab's 2026 fleet study</a> of 22,700+ EVs across 21 makes and models. Replacement cost is anchored to <a href="https://www.recurrentauto.com/research/costs-ev-battery-replacement" target="_blank" rel="noopener">Recurrent Auto's research</a> on real-world installed replacement costs. Neither is specific to your make, model, or region, actual cost can differ substantially. If you're making a real financial decision, get a battery health check and a replacement quote from a dealer or a qualified independent EV shop.</p>
   </div>
 
   <!-- Below Results Ad -->
@@ -264,16 +273,16 @@
 
   <section class="explain">
     <h2>How this is calculated</h2>
-    <p>Capacity retained is estimated from a per-year decline range applied to your vehicle's age, wider for NMC/NCA chemistry, narrower for LFP, and widest if chemistry is unknown. Replacement cost multiplies your pack size in kWh by a wide dollar-per-kWh range covering parts and labor. Both are shown as ranges on purpose, a single precise number would overstate what public research actually supports for an individual vehicle.</p>
+    <p>Capacity retained applies a per-year decline rate to your vehicle's age. <a href="https://www.geotab.com/press-release/ev-battery-health-degradation-fast-charging-study/" target="_blank" rel="noopener">Geotab's 2026 study</a> of 22,700+ EVs found average degradation of about 1.5% per year for vehicles charged mostly on AC power, rising to about 3.0% per year for vehicles that use DC fast charging frequently, with an average of 2.3% per year and roughly 82% capacity retained after 8 years across the full fleet. This calculator anchors its range to those two reported figures based on your selected charging habits. Replacement cost multiplies your pack size in kWh by a dollar-per-kWh range derived from <a href="https://www.recurrentauto.com/research/costs-ev-battery-replacement" target="_blank" rel="noopener">Recurrent Auto's</a> real-world reported installed costs, which run from about $4,000 for smaller packs to over $20,000 for larger ones.</p>
 
-    <h3>Why chemistry matters</h3>
-    <p>LFP (lithium iron phosphate) packs are broadly reported in published research to tolerate more charge cycles and degrade more slowly than NMC or NCA packs, though typically at lower energy density for the same physical size. If you don't know your vehicle's chemistry, the estimate widens to responsibly cover both rather than guessing.</p>
+    <h3>Why charging habits, not chemistry, drive this estimate</h3>
+    <p>Published fleet research measures degradation by charging pattern, not by chemistry, so that's what this calculator's range is anchored to. Chemistry still matters in general, LFP (lithium iron phosphate) packs are broadly reported to tolerate more charge cycles than NMC or NCA packs, but there isn't public fleet-scale data breaking degradation down by chemistry the way there is for charging habits. Rather than invent a chemistry-based number without a source, this calculator leaves chemistry out of the math.</p>
 
     <h3>Why replacement cost varies so much</h3>
-    <p>Replacement cost depends on pack size, whether the whole pack or just a module needs replacing, manufacturer versus independent labor rates, and current battery material pricing, which fluctuates over time. Get a quote from a dealer or a qualified independent EV shop for a number specific to your vehicle.</p>
+    <p>Recurrent Auto's data shows installed replacement cost scaling with pack size and vehicle class, from about $4,000 for smaller packs to over $20,000 for larger ones, which implies a per-kWh range this calculator applies to your own pack size. Whether the whole pack or just a module needs replacing, and local labor rates, both push the real number around further. Get a quote from a dealer or a qualified independent EV shop for a number specific to your vehicle.</p>
 
     <h3>What this doesn't account for</h3>
-    <p>Most EV batteries sold in the U.S. carry a minimum 8-year/100,000-mile warranty under federal requirements, which may cover a failing pack outright, check your specific vehicle's coverage before assuming a replacement cost applies to you. This also doesn't model partial module-level repairs, which can cost far less than a full pack replacement on packs designed to allow it, or the effect of climate and DC fast charging habits, both of which can meaningfully speed up degradation beyond these general ranges.</p>
+    <p>Most EV batteries sold in the U.S. carry a minimum 8-year/100,000-mile warranty under federal law (Clean Air Act Section 177), which may cover a failing pack outright, check your specific vehicle's coverage before assuming a replacement cost applies to you. Recurrent Auto's research also found only about 2.5% of EVs in their tracked fleet have ever needed a replacement, so treat a full replacement as the less likely outcome, not the default one. This also doesn't model partial module-level repairs, which can cost far less than a full pack replacement on packs designed to allow it, or the effect of climate, both of which can shift real-world results beyond these ranges.</p>
   </section>
 
   <!-- Between Explainer and FAQ Ad -->
@@ -283,20 +292,20 @@
   <section class="faq">
     <h2>Frequently asked</h2>
     <div class="faq-item">
-      <h3>How accurate is this estimate?</h3>
-      <p>This is a rough, illustrative range built from generally published fleet degradation research, not a model-specific prediction. Actual capacity depends heavily on climate, how often you use DC fast charging, and your specific vehicle's battery chemistry and thermal management system. Treat this as a starting point, not a diagnosis.</p>
+      <h3>Where do these numbers come from?</h3>
+      <p>Degradation rates are drawn from <a href="https://www.geotab.com/press-release/ev-battery-health-degradation-fast-charging-study/" target="_blank" rel="noopener">Geotab's 2026 fleet study</a> of over 22,700 EVs across 21 makes and models, which found average capacity loss of 1.5% per year for mostly AC-charged vehicles up to 3.0% per year for frequent DC fast charging, and about 82% capacity retained on average after 8 years. Replacement cost is drawn from <a href="https://www.recurrentauto.com/research/costs-ev-battery-replacement" target="_blank" rel="noopener">Recurrent Auto's research</a> on real-world installed battery replacement costs, which range from about $4,000 for smaller packs to over $20,000 for larger ones. Neither source is specific to your exact vehicle, treat the result as a sourced starting range, not a quote.</p>
     </div>
     <div class="faq-item">
-      <h3>Why does battery chemistry matter?</h3>
-      <p>LFP (lithium iron phosphate) packs are broadly reported in published research to tolerate more charge cycles and degrade more slowly than NMC or NCA packs, though typically at lower energy density for the same physical size. Select Not sure if you don't know which chemistry your vehicle uses, the estimate will widen to cover both.</p>
+      <h3>Why do charging habits matter more than battery chemistry here?</h3>
+      <p>Published fleet research measures degradation by charging pattern, not by chemistry, so that's what this calculator's range is anchored to. Chemistry still matters in general, LFP packs are broadly reported to tolerate more charge cycles than NMC or NCA, but there isn't public fleet-scale data breaking degradation down by chemistry the way there is for charging habits, so this calculator doesn't use chemistry to change the numbers.</p>
     </div>
     <div class="faq-item">
       <h3>Why is the replacement cost such a wide range?</h3>
-      <p>Replacement cost depends on pack size, whether the whole pack or just a module needs replacing, manufacturer versus independent labor rates, and current battery material pricing, which fluctuates. Get a quote from a dealer or a qualified independent EV shop for an accurate number specific to your vehicle.</p>
+      <p>Recurrent Auto's real-world data shows installed replacement cost ranging from about $4,000 for smaller packs to over $20,000 for larger ones, driven by pack size, vehicle class, whether the whole pack or just a module needs replacing, and labor rates. Get a quote from a dealer or a qualified independent EV shop for a number specific to your vehicle.</p>
     </div>
     <div class="faq-item">
       <h3>What doesn't this calculator account for?</h3>
-      <p>Most EV batteries sold in the U.S. carry a minimum 8-year/100,000-mile warranty under federal requirements, which may cover a failing pack outright, check your specific vehicle's coverage before assuming a replacement cost applies to you. This also doesn't model partial module-level repairs, which can cost far less than a full pack replacement on packs designed to allow it.</p>
+      <p>Most EV batteries sold in the U.S. carry a minimum 8-year/100,000-mile warranty under federal law (Clean Air Act Section 177), which may cover a failing pack outright, check your specific vehicle's coverage before assuming a replacement cost applies to you. Recurrent Auto's research also found only about 2.5% of EVs in their tracked fleet have ever needed a replacement, full replacement is uncommon. This also doesn't model partial module-level repairs, which can cost far less than a full pack replacement on packs designed to allow it.</p>
     </div>
   </section>
 
@@ -311,14 +320,18 @@
   const $ = id => document.getElementById(id);
   const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
 
-  // PLACEHOLDER — general industry-reported ranges, not sourced to a specific study or model.
-  // Verify and replace before treating this as production-quality content.
-  const CHEMISTRY_DECLINE = {
-    nmc:    { lowPerYear: 1.0, highPerYear: 2.5 },
-    lfp:    { lowPerYear: 0.5, highPerYear: 1.5 },
-    unsure: { lowPerYear: 0.5, highPerYear: 2.5 }
+  // Sourced to Geotab's 2026 fleet study (22,700+ EVs): ~1.5%/yr average for mostly-AC-charged
+  // vehicles, up to ~3.0%/yr for frequent DC fast charging. "Unsure" spans the full reported range.
+  // https://www.geotab.com/press-release/ev-battery-health-degradation-fast-charging-study/
+  const CHARGING_DECLINE = {
+    ac_mostly:    { lowPerYear: 1.5, highPerYear: 1.5 },
+    fast_charging:{ lowPerYear: 3.0, highPerYear: 3.0 },
+    unsure:       { lowPerYear: 1.5, highPerYear: 3.0 }
   };
-  const COST_PER_KWH_LOW = 100;
+  // Sourced to Recurrent Auto's real-world installed replacement cost data (~$4,000 for smaller
+  // packs to $20,000+ for larger ones), implying roughly this per-kWh range at retail.
+  // https://www.recurrentauto.com/research/costs-ev-battery-replacement
+  const COST_PER_KWH_LOW = 150;
   const COST_PER_KWH_HIGH = 250;
   const CAPACITY_FLOOR = 55;
 
@@ -326,9 +339,9 @@
     const packSize = Math.max(1, parseFloat($('packSize').value) || 1);
     const currentMileage = Math.max(0, parseFloat($('currentMileage').value) || 0);
     const age = Math.max(0, parseFloat($('vehicleAge').value) || 0);
-    const chemistry = $('chemistry').value;
+    const habits = $('chargingHabits').value;
 
-    const decline = CHEMISTRY_DECLINE[chemistry] || CHEMISTRY_DECLINE.unsure;
+    const decline = CHARGING_DECLINE[habits] || CHARGING_DECLINE.unsure;
     const capacityHigh = Math.max(CAPACITY_FLOOR, 100 - decline.lowPerYear * age);
     const capacityLow = Math.max(CAPACITY_FLOOR, 100 - decline.highPerYear * age);
 

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EVMath — Free EV Cost Calculators, Sourced From Public Data</title>
+<meta name="description" content="Free calculators for EV charging cost, total cost of ownership vs. gas, home charging payback, battery degradation, and repair costs. No login, no manufacturer bias.">
+<link rel="canonical" href="https://pf-builds.github.io/evmath/">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #12181C;
+    --panel: #182228;
+    --border: #263038;
+    --accent: #1FB8CD;
+    --accent-bg: rgba(31, 184, 205, 0.08);
+    --ink: #E8EEF1;
+    --ink-soft: #8FA0A8;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); }
+
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 20px 80px; }
+
+  .site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 44px;
+  }
+  .site-nav .brand-link {
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+  .site-nav .links { display: flex; flex-wrap: wrap; gap: 16px; margin-left: auto; }
+  .site-nav a:not(.brand-link) { color: var(--ink-soft); text-decoration: none; }
+  .site-nav a:not(.brand-link):hover { color: var(--accent); }
+
+  .layout { display: grid; grid-template-columns: 1fr 300px; gap: 40px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .sidebar-ad { display: none; } }
+
+  .main-col { min-width: 0; }
+
+  header.hero { margin-bottom: 28px; }
+
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: clamp(1.7rem, 4vw, 2.5rem);
+    line-height: 1.2;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+
+  .sub { color: var(--ink-soft); font-size: 1.05rem; max-width: 62ch; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 26px;
+    margin-bottom: 20px;
+  }
+
+  .card h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 18px;
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 4px;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field .hint { font-size: 0.78rem; color: var(--ink-soft); font-weight: 400; margin-top: 4px; }
+
+  input[type="number"] {
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 1rem;
+    font-family: 'IBM Plex Mono', monospace;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  input[type="number"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+
+  .ledger { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 8px; }
+  .ledger-head { padding: 18px 26px 4px; }
+  .ledger-head .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  .col { padding: 14px 26px 22px; border-top: 1px solid var(--border); background: var(--accent-bg); }
+
+  .line {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    padding: 5px 0;
+    color: var(--ink-soft);
+  }
+
+  .line.total {
+    border-top: 1px dashed var(--border);
+    margin-top: 8px;
+    padding-top: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 1.05rem;
+  }
+
+  .cta-row { padding: 16px 26px 22px; border-top: 1px solid var(--border); }
+  .cta-row a { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 0.88rem; text-decoration: none; }
+  .cta-row a:hover { text-decoration: underline; }
+
+  .ad-slot {
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 0.75rem;
+    font-family: 'IBM Plex Mono', monospace;
+    margin: 24px 0;
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin: 8px 0 8px;
+  }
+
+  .tool-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: border-color 0.15s ease;
+  }
+  .tool-card:hover { border-color: var(--accent); }
+
+  .tool-card .icon { font-size: 1.4rem; margin-bottom: 10px; }
+
+  .tool-card h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.02rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+
+  .tool-card p { color: var(--ink-soft); font-size: 0.88rem; margin: 0 0 12px; }
+
+  .tool-card .cta { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--accent); font-weight: 600; }
+
+  section.trust {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin: 28px 0 8px;
+  }
+  section.trust p {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink);
+    font-size: 0.92rem;
+    margin: 0;
+  }
+  section.trust p strong { color: var(--accent); }
+
+  .sidebar-ad .ad-slot { height: 250px; display: flex; align-items: center; justify-content: center; margin: 0; }
+  .sidebar-ad .label { font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); margin-bottom: 10px; }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+  footer a { color: var(--ink-soft); }
+</style>
+<!-- AdSense loader — same client ID as pf-builds.github.io (domain-level approval). Uncomment once AdSense is approved.
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6054690102277779" crossorigin="anonymous"></script>
+-->
+</head>
+<body>
+<div class="wrap">
+
+<nav class="site-nav">
+  <a href="index.html" class="brand-link">EVMath</a>
+  <div class="links">
+    <a href="charging-cost-per-mile-calculator.html">Charging cost per mile</a>
+    <a href="ev-vs-gas-tco-calculator.html">EV vs. gas TCO</a>
+    <a href="home-charging-payback-calculator.html">Home charging payback</a>
+    <a href="battery-replacement-cost-calculator.html">Battery replacement</a>
+    <a href="ev-repair-cost-estimator.html">EV repair costs</a>
+  </div>
+</nav>
+
+<div class="layout">
+<div class="main-col">
+
+  <header class="hero">
+    <h1>What does driving electric actually cost?</h1>
+    <p class="sub">Five free calculators for EV ownership costs, charging, total cost of ownership, home charger payback, battery replacement, and repairs. Enter your own numbers, get a straight answer, no manufacturer bias.</p>
+  </header>
+
+  <div class="card">
+    <h2>Try it: charging cost per mile</h2>
+    <div class="field-grid">
+      <div class="field">
+        <label for="heroRate">Electricity rate ($/kWh)</label>
+        <input type="number" id="heroRate" value="0.16" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label for="heroEfficiency">Vehicle efficiency (miles/kWh)</label>
+        <input type="number" id="heroEfficiency" value="3.5" min="0.1" step="0.1">
+      </div>
+      <div class="field">
+        <label for="heroMiles">Monthly miles</label>
+        <input type="number" id="heroMiles" value="1000" min="0" step="50">
+      </div>
+    </div>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-head"><div class="eyebrow">Estimated cost</div></div>
+    <div class="col">
+      <div class="line"><span>Cost per mile</span><span id="heroCostPerMile">—</span></div>
+      <div class="line total"><span>Monthly cost</span><span id="heroMonthlyCost">—</span></div>
+    </div>
+    <div class="cta-row"><a href="charging-cost-per-mile-calculator.html">Open the full calculator, with gas comparison →</a></div>
+  </div>
+
+  <!-- Ad slot: below hero calculator result
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+  <div class="ad-slot">Ad slot — below hero result (pending AdSense approval)</div>
+
+  <section>
+    <h2 style="font-family:'IBM Plex Mono',monospace; font-size:1.3rem; margin:36px 0 18px;">All calculators</h2>
+    <div class="tools-grid">
+      <a class="tool-card" href="charging-cost-per-mile-calculator.html">
+        <div class="icon">⚡</div>
+        <h3>Charging cost per mile</h3>
+        <p>Compare your real cost per mile on electricity against a gas car, at your own rate and mileage.</p>
+        <div class="cta">Open calculator →</div>
+      </a>
+      <a class="tool-card" href="ev-vs-gas-tco-calculator.html">
+        <div class="icon">⚖️</div>
+        <h3>EV vs. gas total cost of ownership</h3>
+        <p>Purchase price, fuel, maintenance, and resale, itemized side by side over your ownership period.</p>
+        <div class="cta">Open calculator →</div>
+      </a>
+      <a class="tool-card" href="home-charging-payback-calculator.html">
+        <div class="icon">🔌</div>
+        <h3>Home charging install payback</h3>
+        <p>See how many months it takes a Level 2 charger to pay for itself versus public charging.</p>
+        <div class="cta">Open calculator →</div>
+      </a>
+      <a class="tool-card" href="battery-replacement-cost-calculator.html">
+        <div class="icon">🔋</div>
+        <h3>Battery replacement &amp; degradation</h3>
+        <p>Estimated capacity retained by age and mileage, and a sourced replacement cost range.</p>
+        <div class="cta">Open calculator →</div>
+      </a>
+      <a class="tool-card" href="ev-repair-cost-estimator.html">
+        <div class="icon">🔧</div>
+        <h3>EV repair cost estimator</h3>
+        <p>Certified dealer vs. independent shop cost ranges for common EV-specific repairs.</p>
+        <div class="cta">Open calculator →</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Ad slot: between calculator grid and explainer content
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+  <div class="ad-slot">Ad slot — between grid and trust section (pending AdSense approval)</div>
+
+  <section class="trust">
+    <p>Every figure is sourced from public data — <strong>not any single manufacturer</strong>.</p>
+  </section>
+
+  <footer>
+    <p>EVMath provides general estimates based on public data and typical assumptions. It does not constitute automotive, financial, or purchasing advice. Confirm your vehicle's actual specifications and current local rates before making a purchase or repair decision.</p>
+    <p><a href="privacy.html">Privacy policy</a></p>
+  </footer>
+
+</div>
+
+<aside class="sidebar-ad">
+  <div class="label">Advertisement</div>
+  <!-- Ad slot: desktop sidebar, hidden on mobile
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6054690102277779" data-ad-slot="XXXXXXXXXX" data-ad-format="auto"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+  <div class="ad-slot">Sidebar ad (desktop only, pending AdSense approval)</div>
+</aside>
+</div>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt = n => '$' + n.toFixed(2);
+  const fmtWhole = n => '$' + Math.round(n).toLocaleString('en-US');
+
+  function heroCalc() {
+    const rate = Math.max(0, parseFloat($('heroRate').value) || 0);
+    const efficiency = Math.max(0.1, parseFloat($('heroEfficiency').value) || 0.1);
+    const miles = Math.max(0, parseFloat($('heroMiles').value) || 0);
+
+    const costPerMile = rate / efficiency;
+    const monthlyCost = costPerMile * miles;
+
+    $('heroCostPerMile').textContent = fmt(costPerMile) + '/mi';
+    $('heroMonthlyCost').textContent = fmtWhole(monthlyCost);
+  }
+
+  document.querySelectorAll('#heroRate, #heroEfficiency, #heroMiles').forEach(el => el.addEventListener('input', heroCalc));
+  heroCalc();
+</script>
+
+</body>
+</html>
